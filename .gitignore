@@ -1,0 +1,31 @@
+# Ignore virtual environments
+.venv/
+venv/
+env/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# VSCode settings
+.vscode/
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Model checkpoints / outputs
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.h5
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+
+# Logs or temp
+*.log
+*.tmp
+*.bak
