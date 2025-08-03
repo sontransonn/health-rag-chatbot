@@ -43,7 +43,7 @@ if __name__ == "__main__":
     data = existing_data
     counter_since_last_save = 0
 
-    for i, item in enumerate(symptoms_list):
+    for i, item in enumerate(symptoms_list[:10]):
         name = item["name"]
         url = item["url"]
 

@@ -27,9 +27,19 @@ def crawl_symptom_detail(url):
 
     # Extract content from the article (ignore images)
     content_block = article.find("div", class_="prose max-w-none my-4 prose-a:text-primary") if article else None
-    for tag in content_block(["figure", "figcaption", "img", "picture"]):
-        tag.decompose()
-    content = re.sub(r"\n{2,}", "\n\n", content_block.get_text(separator="\n").strip())
+    if content_block:
+        toc = content_block.find("div", class_="ez-toc-v2_0_72 counter-flat ez-toc-counter ez-toc-custom ez-toc-container-direction")
+        if toc:
+            toc.decompose()
+        for tag in content_block(["figure", "figcaption", "img", "picture"]):
+            tag.decompose()
+        paragraphs = content_block.find_all(["p", "li"])
+        content = "\n\n".join(" ".join(p.stripped_strings)
+            for p in paragraphs
+                if p.get_text(strip=True)
+        )
+    else:
+        content = ""
 
     return {
         "title": title,
