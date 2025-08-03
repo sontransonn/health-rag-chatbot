@@ -1,5 +1,4 @@
-import json, re
-import unicodedata, os
+import json, re, os, unicodedata
 
 def clean_text(text):
     text = unicodedata.normalize("NFKC", text)
@@ -34,16 +33,63 @@ def chunk_text(text, max_words=200, overlap=1):
         chunks.append(" ".join(current_chunk))
     return chunks
 
+def normalize_field(value):
+    if not isinstance(value, str):
+        return ""
+    value = unicodedata.normalize("NFKC", value)
+    value = re.sub(r"\s+", " ", value.strip())
+    return value.lower()
+
 if __name__ == "__main__":
-    input_path="data/raw/youmed_raw_data.json"
-    output_path="data/processed/youmed_articles_chunks.json"
+    input_path = "data/raw/youmed/youmed_raw_data.json"
+    output_dir = "data/processed/youmed/"
+    os.makedirs(output_dir, exist_ok=True)
 
     with open(input_path, "r", encoding="utf-8") as f:
         raw_data = json.load(f)
 
-    processed = []
+    all_chunks = []
+    file_count = 1
+    symptom_count = 0
 
-    cleaned_text = clean_text(raw_data[0]["article"]["content"])
-    chunks = chunk_text(cleaned_text, max_words=200, overlap=1)
-    for i, chunk in enumerate(chunks):
-        print(f"\n--- Chunk {i+1} ---\n{chunk}\n")
+    for idx, article in enumerate(raw_data):
+        content = article.get("article", {}).get("content", "")
+        if not content.strip():
+            continue
+        symptom = normalize_field(article.get("symptom", ""))
+        article_id = article.get("id", f"article_{idx}")
+        article_info = article.get("article", {})
+        metadata = {
+            "symptom_id": normalize_field(article.get("id", "")),
+            "symptom": symptom,
+            "article_url": normalize_field(article.get("article_url", "")),
+            "title": normalize_field(article_info.get("title", "")),
+            "author": normalize_field(article_info.get("author", "")),
+            "specialty": normalize_field(article_info.get("specialty", ""))
+        }
+
+        cleaned = clean_text(content)
+        chunks = chunk_text(cleaned, max_words=200, overlap=1)
+        for i, chunk in enumerate(chunks, start=1):
+            all_chunks.append({
+                "chunk_id": i,
+                "chunk_id_full": f"{article_id}_{i}",
+                "content": chunk,
+                "metadata": metadata
+            })
+
+        symptom_count += 1
+        if symptom_count % 50 == 0:
+            output_path = os.path.join(output_dir, f"youmed_chunks_part_{file_count:03}.json")
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(all_chunks, f, ensure_ascii=False, indent=2)
+            print(f"✅ Đã ghi {len(all_chunks)} chunk vào {output_path}")
+            file_count += 1
+            all_chunks = []
+
+    if all_chunks:
+        output_path = os.path.join(output_dir, f"youmed_chunks_part_{file_count:03}.json")
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(all_chunks, f, ensure_ascii=False, indent=2)
+        print(f"✅ Đã ghi {len(all_chunks)} chunk cuối vào {output_path}")
+

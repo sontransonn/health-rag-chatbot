@@ -3,7 +3,7 @@ import os, hashlib
 from symptoms_list import crawl_symptoms_list
 from symptom_detail import crawl_symptom_detail
 
-OUTPUT_DIR = "data/raw"
+OUTPUT_DIR = "data/raw/youmed"
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "youmed_raw_data.json")
 
 def save_json(data, path):
