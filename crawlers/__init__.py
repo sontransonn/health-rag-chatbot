@@ -1,10 +1,10 @@
 import json, time 
 import os, hashlib
-from symptoms_list import crawl_symptoms_list
-from symptom_detail import crawl_symptom_detail
+from crawlers.youmed_symptoms_list import crawl_symptoms_list
+from crawlers.youmed_symptom_detail import crawl_symptom_detail
 
-OUTPUT_DIR = "data/raw/youmed"
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "youmed_raw_data.json")
+OUTPUT_DIR = "data/raw"
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, "youmed_symptom_raw.json")
 
 def save_json(data, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)

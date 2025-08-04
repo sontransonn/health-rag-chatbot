@@ -1,4 +1,5 @@
-import json, re, os, unicodedata
+import json, re
+import os, unicodedata
 
 def clean_text(text):
     text = unicodedata.normalize("NFKC", text)
@@ -41,8 +42,8 @@ def normalize_field(value):
     return value.lower()
 
 if __name__ == "__main__":
-    input_path = "data/raw/youmed/youmed_raw_data.json"
-    output_dir = "data/processed/youmed/"
+    input_path = "data/raw/youmed_symptom_raw.json"
+    output_dir = "data/preprocessed/"
     os.makedirs(output_dir, exist_ok=True)
 
     with open(input_path, "r", encoding="utf-8") as f:
@@ -80,7 +81,7 @@ if __name__ == "__main__":
 
         symptom_count += 1
         if symptom_count % 50 == 0:
-            output_path = os.path.join(output_dir, f"youmed_chunks_part_{file_count:03}.json")
+            output_path = os.path.join(output_dir, f"youmed_symptom_preprocessed_{file_count:03}.json")
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(all_chunks, f, ensure_ascii=False, indent=2)
             print(f"✅ Đã ghi {len(all_chunks)} chunk vào {output_path}")
@@ -88,7 +89,7 @@ if __name__ == "__main__":
             all_chunks = []
 
     if all_chunks:
-        output_path = os.path.join(output_dir, f"youmed_chunks_part_{file_count:03}.json")
+        output_path = os.path.join(output_dir, f"youmed_symptom_preprocessed_{file_count:03}.json")
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(all_chunks, f, ensure_ascii=False, indent=2)
         print(f"✅ Đã ghi {len(all_chunks)} chunk cuối vào {output_path}")
