@@ -1,5 +1,4 @@
-import json, re
-import os, unicodedata
+import json, re, os, unicodedata
 
 def clean_text(text):
     text = unicodedata.normalize("NFKC", text)
@@ -43,7 +42,7 @@ def normalize_field(value):
 
 if __name__ == "__main__":
     input_path = "data/raw/youmed_symptom_raw.json"
-    output_dir = "data/preprocessed/"
+    output_dir = "data/processed/"
     os.makedirs(output_dir, exist_ok=True)
 
     with open(input_path, "r", encoding="utf-8") as f:
@@ -53,35 +52,28 @@ if __name__ == "__main__":
     file_count = 1
     symptom_count = 0
 
-    for idx, article in enumerate(raw_data):
-        content = article.get("article", {}).get("content", "")
-        if not content.strip():
+    for idx, symptom in enumerate(raw_data):
+        information = symptom.get("information", "")
+        if not information.strip():
             continue
-        symptom = normalize_field(article.get("symptom", ""))
-        article_id = article.get("id", f"article_{idx}")
-        article_info = article.get("article", {})
+
         metadata = {
-            "symptom_id": normalize_field(article.get("id", "")),
-            "symptom": symptom,
-            "article_url": normalize_field(article.get("article_url", "")),
-            "title": normalize_field(article_info.get("title", "")),
-            "author": normalize_field(article_info.get("author", "")),
-            "specialty": normalize_field(article_info.get("specialty", ""))
+            "symptom_id": normalize_field(symptom.get("symptom_id", "")),
+            "symptom_name": normalize_field(symptom.get("symptom_name", "")),
+            "source": normalize_field(symptom.get("source", ""))
         }
 
-        cleaned = clean_text(content)
-        chunks = chunk_text(cleaned, max_words=200, overlap=1)
+        chunks = chunk_text(clean_text(information), max_words=200, overlap=1)
         for i, chunk in enumerate(chunks, start=1):
             all_chunks.append({
-                "chunk_id": i,
-                "chunk_id_full": f"{article_id}_{i}",
+                "chunk_id": f"{symptom.get("symptom_id", f"symptom_{idx}")}_{i}",
                 "content": chunk,
                 "metadata": metadata
             })
 
         symptom_count += 1
         if symptom_count % 50 == 0:
-            output_path = os.path.join(output_dir, f"youmed_symptom_preprocessed_{file_count:03}.json")
+            output_path = os.path.join(output_dir, f"youmed_symptom_processed_{file_count:03}.json")
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(all_chunks, f, ensure_ascii=False, indent=2)
             print(f"✅ Đã ghi {len(all_chunks)} chunk vào {output_path}")
@@ -89,8 +81,7 @@ if __name__ == "__main__":
             all_chunks = []
 
     if all_chunks:
-        output_path = os.path.join(output_dir, f"youmed_symptom_preprocessed_{file_count:03}.json")
+        output_path = os.path.join(output_dir, f"youmed_symptom_processed_{file_count:03}.json")
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(all_chunks, f, ensure_ascii=False, indent=2)
         print(f"✅ Đã ghi {len(all_chunks)} chunk cuối vào {output_path}")
-

@@ -1,7 +1,7 @@
 import json, time 
 import os, hashlib
-from crawlers.youmed_symptoms_list import crawl_symptoms_list
-from crawlers.youmed_symptom_detail import crawl_symptom_detail
+from youmed_symptoms_list import crawl_symptoms_list
+from youmed_symptom_detail import crawl_symptom_detail
 
 OUTPUT_DIR = "data/raw"
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "youmed_symptom_raw.json")
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     print(f"Found {len(symptoms_list)} symptoms.")
 
     existing_data = load_existing_data(OUTPUT_FILE)
-    crawled_urls = {item["article_url"] for item in existing_data}
+    crawled_urls = {item["source"] for item in existing_data}
     print(f"Resuming from backup, already crawled {len(existing_data)} items.")
 
     data = existing_data
@@ -52,12 +52,12 @@ if __name__ == "__main__":
             continue
 
         try:
-            article = crawl_with_retry(url)
+            text = crawl_with_retry(url)
             data.append({
-                "id": generate_id(name + url),
-                "symptom": name,
-                "article_url": url,
-                "article": article
+                "symptom_id": generate_id(name + url),
+                "symptom_name": name,
+                "information": text,
+                "source": url,
             })
             counter_since_last_save += 1
 
