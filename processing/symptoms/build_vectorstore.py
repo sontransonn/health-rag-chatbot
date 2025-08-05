@@ -4,8 +4,8 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.schema import Document
 
-data_dir = "data/processed"
-all_json_files = sorted(glob(os.path.join(data_dir, "youmed_symptom_processed_*.json")))
+data_dir = "data/symptoms/processed"
+all_json_files = sorted(glob(os.path.join(data_dir, "processed_*.json")))
 
 print(f"📂 Found {len(all_json_files)} files.")
 
@@ -27,6 +27,6 @@ embedding_model = HuggingFaceEmbeddings(
 
 vectorstore = FAISS.from_documents(docs, embedding_model)
 
-save_path = "vectorstores/youmed_symptom_index"
+save_path = "data/symptoms/vectorstore"
 vectorstore.save_local(save_path)
 print(f"✅ Vectorstore saved to: {save_path}")

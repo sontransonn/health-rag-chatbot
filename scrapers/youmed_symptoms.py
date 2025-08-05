@@ -1,10 +1,10 @@
 import json, time 
-import os, hashlib
-from youmed_symptoms_list import crawl_symptoms_list
-from youmed_symptom_detail import crawl_symptom_detail
+import os, hashlib, requests
+from bs4 import BeautifulSoup
 
-OUTPUT_DIR = "data/raw"
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "youmed_symptom_raw.json")
+BASE_URL= "https://youmed.vn/tin-tuc/trieu-chung-benh/"
+OUTPUT_DIR = "data/symptoms"
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, "raw.json")
 
 def save_json(data, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -30,6 +30,46 @@ def crawl_with_retry(url, retries=2, delay=2):
                 time.sleep(delay)
             else:
                 raise e
+
+def crawl_symptoms_list():
+    response = requests.get(BASE_URL)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    symptom_elements = soup.select(".letter-section ul.az-columns li a")
+
+    symptoms = []
+    for el in symptom_elements:
+        name = el.text.strip()
+        url = el["href"]
+        symptoms.append({"name": name, "url": url})
+
+    return symptoms
+
+def crawl_symptom_detail(url):
+    response = requests.get(url)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    article = soup.select_one("section.article-content article")
+    content_block = article.find("div", class_="prose max-w-none my-4 prose-a:text-primary") if article else None
+
+    if not content_block:
+        return ""
+    
+    toc = content_block.find("div", class_="ez-toc-v2_0_72 counter-flat ez-toc-counter ez-toc-custom ez-toc-container-direction")
+    if toc:
+        toc.decompose()
+    for tag in content_block(["figure", "figcaption", "img", "picture"]):
+        tag.decompose()
+    paragraphs = content_block.find_all(["p", "li"])
+    content = "\n\n".join(" ".join(p.stripped_strings)
+        for p in paragraphs
+            if p.get_text(strip=True)
+        )
+
+    return content
 
 if __name__ == "__main__":
     print("Loading symptom list...")
